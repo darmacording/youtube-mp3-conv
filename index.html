@@ -1,14 +1,28 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Hello World</title>
-  <link href='/style.css' rel='stylesheet'>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YouTube to MP3 Converter</title>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <h1>Hello, world!</h1>
-  <button onclick="console.log('hello');">Press me</button>
-  <script defer type="text/javascript" src="/main.js"></script>
+    <div class="container">
+        <h1>YouTube to MP3 Converter</h1>
+        <div class="input-section">
+            <label for="youtube-url">YouTube URL:</label>
+            <input type="url" id="youtube-url" placeholder="Enter YouTube video URL" required>
+        </div>
+        
+        <div class="download-info">
+            <p><strong>Note:</strong> Direct MP3 conversion requires a backend service. The browser will prompt you to select a save location for the downloaded file.</p>
+        </div>
+
+        <button id="download-button">Download MP3</button>
+        
+        <div id="status-message" class="status-message"></div>
+    </div>
+
+    <script type="module" src="main.js"></script>
 </body>
 </html>

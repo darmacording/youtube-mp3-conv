@@ -1,1 +1,111 @@
-/* Add styles here */
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #f4f7f6;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    margin: 0;
+    color: #333;
+}
+
+.container {
+    background-color: #ffffff;
+    padding: 40px 50px;
+    border-radius: 12px;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+    text-align: center;
+    width: 90%;
+    max-width: 500px;
+}
+
+h1 {
+    color: #0d47a1; /* Darker blue */
+    margin-bottom: 30px;
+    font-size: 2.2em;
+    letter-spacing: -0.5px;
+}
+
+.input-section {
+    margin-bottom: 25px;
+    text-align: left;
+}
+
+.input-section label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 600;
+    color: #555;
+}
+
+.input-section input[type="url"],
+.input-section input[type="text"] {
+    width: calc(100% - 20px); /* Account for padding */
+    padding: 12px 10px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    font-size: 1em;
+    box-sizing: border-box; /* Include padding and border in the element's total width and height */
+    transition: border-color 0.3s ease;
+}
+
+.input-section input[type="url"]:focus,
+.input-section input[type="text"]:focus {
+    border-color: #0d47a1; /* Darker blue on focus */
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(13, 71, 161, 0.2);
+}
+
+.download-info {
+    background-color: #e3f2fd; /* Light blue background */
+    border-left: 4px solid #0d47a1;
+    padding: 15px;
+    margin-bottom: 25px;
+    text-align: left;
+    border-radius: 4px;
+    font-size: 0.95em;
+    color: #1e3a8a; /* Darker blue text */
+}
+
+.download-info strong {
+    color: #0d47a1;
+}
+
+button {
+    background-color: #1e88e5; /* Brighter blue */
+    color: white;
+    padding: 12px 25px;
+    border: none;
+    border-radius: 6px;
+    font-size: 1.1em;
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+}
+
+button:hover {
+    background-color: #1565c0; /* Darker blue on hover */
+}
+
+button:active {
+    transform: translateY(1px); /* Slight press effect */
+}
+
+.status-message {
+    margin-top: 20px;
+    font-weight: 500;
+    min-height: 1.5em; /* Reserve space to prevent layout shift */
+}
+
+.status-message.success {
+    color: #2e7d32; /* Green */
+}
+
+.status-message.error {
+    color: #c62828; /* Red */
+}
+
+.status-message.processing {
+    color: #f57c00; /* Orange */
+}
