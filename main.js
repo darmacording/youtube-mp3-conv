@@ -21,70 +21,78 @@ document.getElementById('download-button').addEventListener('click', async () =>
     let videoTitle = 'converted_audio';
 
     try {
-        try {
-            const oembedUrl = 'https://www.youtube.com/oembed?url=' + encodeURIComponent(youtubeUrl) + '&format=json';
-            const oembedResponse = await fetch(oembedUrl);
-            if (oembedResponse.ok) {
-                const oembedData = await oembedResponse.json();
-                videoTitle = oembedData.title.replace(/[^\w\s-]/gi, '').trim();
-            }
-        } catch (e) {
-            console.warn('Could not fetch video title:', e);
+        const oembedUrl = 'https://www.youtube.com/oembed?url=' + encodeURIComponent(youtubeUrl) + '&format=json';
+        const oembedResponse = await fetch(oembedUrl);
+        if (oembedResponse.ok) {
+            const oembedData = await oembedResponse.json();
+            videoTitle = oembedData.title.replace(/[^\w\s-]/gi, '').trim();
         }
+    } catch (e) {
+        console.warn('Could not fetch video title:', e);
+    }
 
-        statusMessageDiv.textContent = 'Converting: "' + videoTitle + '"... Please wait.';
+    statusMessageDiv.textContent = 'Initializing conversion: "' + videoTitle + '"...';
 
-        const instances = [
-            'https://api.cobalt.tools/api/json',
-            'https://cobalt.meowing.de/api/json',
-            'https://cobalt-api.kwiateusz.xyz/api/json'
-        ];
+    const triggerDownload = (url, filename) => {
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename + '.mp3';
+        a.target = '_blank';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+    };
 
-        let conversionData = null;
+    try {
+        const initUrl = 'https://loader.to/ajax/download.php?url=' + encodeURIComponent(youtubeUrl) + '&format=mp3';
+        const initRes = await fetch(initUrl);
+        const initData = await initRes.json();
 
-        for (const instance of instances) {
-            try {
-                const response = await fetch(instance, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Accept': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        url: youtubeUrl,
-                        isAudioOnly: true,
-                        audioFormat: 'mp3',
-                        vQuality: '720'
-                    })
-                });
+        if (initData.success && initData.id) {
+            const jobId = initData.id;
+            
+            const pollInterval = setInterval(async () => {
+                try {
+                    const progressUrl = 'https://loader.to/ajax/progress.php?id=' + jobId;
+                    const progressRes = await fetch(progressUrl);
+                    const progressData = await progressRes.json();
 
-                if (response.ok) {
-                    conversionData = await response.json();
-                    break;
+                    if (progressData.success === 1 || progressData.success === true) {
+                        if (progressData.download_url) {
+                            clearInterval(pollInterval);
+                            statusMessageDiv.textContent = 'Success! Starting download...';
+                            statusMessageDiv.style.color = 'green';
+                            triggerDownload(progressData.download_url, videoTitle);
+                        }
+                    } else if (progressData.text === 'Error') {
+                        clearInterval(pollInterval);
+                        throw new Error('Conversion error.');
+                    } else {
+                        statusMessageDiv.textContent = 'Converting... ' + (progressData.progress / 10).toFixed(1) + '%';
+                    }
+                } catch (e) {
+                    clearInterval(pollInterval);
+                    tryFallback();
                 }
-            } catch (err) {
-                console.error('Instance ' + instance + ' failed:', err);
-            }
-        }
-
-        if (conversionData && (conversionData.status === 'stream' || conversionData.status === 'redirect')) {
-            statusMessageDiv.textContent = 'Conversion successful! Starting download...';
-            statusMessageDiv.style.color = 'green';
-
-            const a = document.createElement('a');
-            a.href = conversionData.url;
-            a.download = videoTitle + '.mp3';
-            a.target = '_blank';
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
+            }, 2000);
+            return;
         } else {
-            throw new Error('All conversion services are busy. Please try again later.');
+            throw new Error('Init failed');
         }
+    } catch (err) {
+        tryFallback();
+    }
 
-    } catch (error) {
-        console.error('Error:', error);
-        statusMessageDiv.textContent = 'Error: ' + error.message;
-        statusMessageDiv.style.color = 'red';
+    function tryFallback() {
+        try {
+            statusMessageDiv.textContent = 'Trying alternative server...';
+            const veviozUrl = 'https://api.vevioz.com/api/single/mp3?url=' + encodeURIComponent(youtubeUrl);
+            window.open(veviozUrl, '_blank');
+            statusMessageDiv.textContent = 'Redirected to download server. Please check your download folder.';
+            statusMessageDiv.style.color = 'green';
+        } catch (err) {
+            statusMessageDiv.textContent = 'All services are busy. Please try again later.';
+            statusMessageDiv.style.color = 'red';
+        }
     }
 });
