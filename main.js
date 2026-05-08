@@ -19,6 +19,7 @@ document.getElementById('download-button').addEventListener('click', async () =>
     statusMessageDiv.style.color = 'orange';
 
     let videoTitle = 'converted_audio';
+    const proxy = 'https://api.allorigins.win/raw?url=';
 
     try {
         const oembedUrl = 'https://www.youtube.com/oembed?url=' + encodeURIComponent(youtubeUrl) + '&format=json';
@@ -43,9 +44,22 @@ document.getElementById('download-button').addEventListener('click', async () =>
         document.body.removeChild(a);
     };
 
+    const tryFallback = () => {
+        try {
+            statusMessageDiv.textContent = 'Trying alternative server... (Check pop-ups)';
+            const veviozUrl = 'https://api.vevioz.com/api/single/mp3?url=' + encodeURIComponent(youtubeUrl);
+            window.open(veviozUrl, '_blank');
+            statusMessageDiv.textContent = 'Redirected to download server. Please check your browser\'s download folder.';
+            statusMessageDiv.style.color = 'green';
+        } catch (err) {
+            statusMessageDiv.textContent = 'All services are currently busy. Please try again later.';
+            statusMessageDiv.style.color = 'red';
+        }
+    };
+
     try {
         const initUrl = 'https://loader.to/ajax/download.php?url=' + encodeURIComponent(youtubeUrl) + '&format=mp3';
-        const initRes = await fetch(initUrl);
+        const initRes = await fetch(proxy + encodeURIComponent(initUrl));
         const initData = await initRes.json();
 
         if (initData.success && initData.id) {
@@ -54,7 +68,7 @@ document.getElementById('download-button').addEventListener('click', async () =>
             const pollInterval = setInterval(async () => {
                 try {
                     const progressUrl = 'https://loader.to/ajax/progress.php?id=' + jobId;
-                    const progressRes = await fetch(progressUrl);
+                    const progressRes = await fetch(proxy + encodeURIComponent(progressUrl));
                     const progressData = await progressRes.json();
 
                     if (progressData.success === 1 || progressData.success === true) {
@@ -64,35 +78,23 @@ document.getElementById('download-button').addEventListener('click', async () =>
                             statusMessageDiv.style.color = 'green';
                             triggerDownload(progressData.download_url, videoTitle);
                         }
-                    } else if (progressData.text === 'Error') {
+                    } else if (progressData.text === 'Error' || progressData.error) {
                         clearInterval(pollInterval);
-                        throw new Error('Conversion error.');
+                        tryFallback();
                     } else {
-                        statusMessageDiv.textContent = 'Converting... ' + (progressData.progress / 10).toFixed(1) + '%';
+                        const progress = progressData.progress || 0;
+                        statusMessageDiv.textContent = 'Converting... ' + (progress / 10).toFixed(1) + '%';
                     }
                 } catch (e) {
                     clearInterval(pollInterval);
                     tryFallback();
                 }
-            }, 2000);
-            return;
+            }, 3000);
         } else {
             throw new Error('Init failed');
         }
     } catch (err) {
+        console.warn('Loader.to failed, trying fallback...', err);
         tryFallback();
-    }
-
-    function tryFallback() {
-        try {
-            statusMessageDiv.textContent = 'Trying alternative server...';
-            const veviozUrl = 'https://api.vevioz.com/api/single/mp3?url=' + encodeURIComponent(youtubeUrl);
-            window.open(veviozUrl, '_blank');
-            statusMessageDiv.textContent = 'Redirected to download server. Please check your download folder.';
-            statusMessageDiv.style.color = 'green';
-        } catch (err) {
-            statusMessageDiv.textContent = 'All services are busy. Please try again later.';
-            statusMessageDiv.style.color = 'red';
-        }
     }
 });
